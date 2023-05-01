@@ -2,7 +2,7 @@
 // Enter the lottery (paying some amount)
 // Pick a random winner (verifiably random)
 // Winner to be selecter every X minutes -> completely automated
-// Chainlink Oracle -> Randomness, Automated Execution (Chainlink Keeper)
+// Chainlink Oracle -> Randomness, Automated Execution (Chainlink Automation)
 
 // SPDX-License-Identifier: MIT
 
@@ -15,13 +15,21 @@ import "@chainlink/contracts/src/v0.8/interfaces/AutomationCompatibleInterface.s
 error Raffle__NotEnoughETHEntered();
 error Raffle__TransferedFailed();
 error Raffle__NotOpen();
+error Raffle__UpkeepNotNeeded(uint256 currentBalance, uint256 numPlayers, uint256 raffleState);
+
+/**
+ * @title A sample Raffle Contract
+ * @author Edgar Gutierrez
+ * @notice This contract is for creating an untamperable decentralized smart contract
+ * @dev This implements Chainlink VRF v2 and Chainlink Automation
+ */
 
 contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
     /* Type Declarations */
     enum RaffleState {
         OPEN,
         CALCULATING
-    } // uint256 0 = OPEN, 1 = CALCULATION
+    }
 
     /* State Variables */
     uint256 private immutable i_entranceFee;
@@ -46,6 +54,7 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
     event RequestedRaffleWinner(uint256 indexed requestId);
     event WinnerPicked(address indexed winner);
 
+    /* Functions */
     constructor(
         address vrfCoordinatorV2,
         uint256 entranceFee,
@@ -89,8 +98,8 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
      */
 
     function checkUpkeep(
-        bytes calldata /* checkData */
-    ) external override returns (bool upkeepNeeded, bytes memory /* performData */) {
+        bytes memory /* checkData */
+    ) public override returns (bool upkeepNeeded, bytes memory /* performData */) {
         bool isOpen = (RaffleState.OPEN == s_raffleState);
         bool timePassed = ((block.timestamp - s_lastTimeStamp) > i_interval);
         bool hasPlayers = (s_players.length > 0);
@@ -99,10 +108,18 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
         // (block.timestamp - last block timestamp) > interval
     }
 
-    function requestRandomWinner() external {
+    function performUpkeep(bytes calldata /* peformDataf*/) external override {
         // Request the random number
         // Once we get it, do something with it
         // 2 transaction process
+        (bool upkeepNeeded, ) = checkUpkeep("");
+        if (!upkeepNeeded) {
+            revert Raffle__UpkeepNotNeeded(
+                address(this).balance,
+                s_players.length,
+                uint256(s_raffleState)
+            );
+        }
         s_raffleState = RaffleState.CALCULATING;
         uint256 requestId = i_vrfCoordinator.requestRandomWords(
             i_gasLane,
@@ -123,6 +140,7 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
         s_recentWinner = recentWinner;
         s_raffleState = RaffleState.OPEN;
         s_players = new address payable[](0);
+        s_lastTimeStamp = block.timestamp;
         (bool success, ) = recentWinner.call{value: address(this).balance}("");
         // require(success)
         if (!success) {
@@ -131,7 +149,7 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
         emit WinnerPicked(recentWinner);
     }
 
-    /* View / Pure functions */
+    /* View / Pure Functions */
     function getEntranceFee() public view returns (uint256) {
         return i_entranceFee;
     }
@@ -142,5 +160,25 @@ contract Raffle is VRFConsumerBaseV2, AutomationCompatibleInterface {
 
     function getRecentWinner() public view returns (address) {
         return s_recentWinner;
+    }
+
+    function getRaffleState() public view returns (RaffleState) {
+        return s_raffleState;
+    }
+
+    function getNumWords() public pure returns (uint256) {
+        return NUM_WORDS;
+    }
+
+    function getNumberOfPlayers() public view returns (uint256) {
+        return s_players.length;
+    }
+
+    function getLatestTimeStamp() public view returns (uint256) {
+        return s_lastTimeStamp;
+    }
+
+    function getRequestConfirmations() public pure returns (uint256) {
+        return REQUEST_CONFIRMATIONS;
     }
 }
