@@ -25,6 +25,15 @@ module.exports = {
             blockConfirmations: 6,
         },
     },
+    gasReporter: {
+        enabled: false,
+        outputFile: "gas-report.txt",
+        noColors: true,
+        currency: "USD",
+        // coinmarketcap: COINMARKETCAP_API_KEY,
+        // token: "ETH",
+    },
+    solidity: "0.8.7",
     namedAccounts: {
         deployer: {
             default: 0,
@@ -32,15 +41,5 @@ module.exports = {
         player: {
             default: 1,
         },
-    },
-    solidity: {
-        compilers: [
-            {
-                version: "0.8.7",
-            },
-            {
-                version: "0.4.24",
-            },
-        ],
     },
 }
