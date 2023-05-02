@@ -22,10 +22,9 @@ module.exports = {
             url: SEPOLIA_RPC_URL,
             accounts: [PRIVATE_KEY],
             chainId: 11155111,
-            blockConfirmations: 6
-        }
-    }
-    solidity: "0.8.7",
+            blockConfirmations: 6,
+        },
+    },
     namedAccounts: {
         deployer: {
             default: 0,
@@ -33,5 +32,15 @@ module.exports = {
         player: {
             default: 1,
         },
+    },
+    solidity: {
+        compilers: [
+            {
+                version: "0.8.7",
+            },
+            {
+                version: "0.4.24",
+            },
+        ],
     },
 }
