@@ -12,11 +12,11 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
 
     if (developmentChains.includes(network.name)) {
         const VRFCoordinatorV2Mock = await ethers.getContract("VRFCoordinatorV2Mock")
-        vrfCoordinatorV2Address = vrfCoordinatorV2Mock.address
-        const transactionResponse = await vrfCoordinatorV2Mock.createSubscription()
+        vrfCoordinatorV2Address = VRFCoordinatorV2Mock.address
+        const transactionResponse = await VRFCoordinatorV2Mock.createSubscription()
         const transactionReceipt = await transactionResponse.wait(1)
         subscriptionId = transactionReceipt.events[0].args.subId
-        await vrfCoordinatorV2Mock.fundSubscription(subscriptionId, VRF_SUB_FUND_AMOUNT)
+        await VRFCoordinatorV2Mock.fundSubscription(subscriptionId, VRF_SUB_FUND_AMOUNT)
     } else {
         vrfCoordinatorV2Address = networkConfig[chainId]["vrfCoordinatorV2"]
         subscriptionId = networkConfig[chainId]["subscriptionId"]
