@@ -25,6 +25,9 @@ module.exports = {
             blockConfirmations: 6,
         },
     },
+    etherscan: {
+        apiKey: ETHERSCAN_API_KEY,
+    },
     gasReporter: {
         enabled: false,
         outputFile: "gas-report.txt",
